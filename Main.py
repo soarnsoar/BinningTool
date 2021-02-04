@@ -28,7 +28,7 @@ cutname1='__BoostedVBF_SR_NoMEKDCut'
 cutname2='__BoostedGGF_SR_MEKDTAG_M1500_C0.01'
 cutname3='__BoostedGGF_SR_UNTAGGED_M1500_C0.01'
 variablename='WW_mass'
-inputf='../hadd.root'
+inputf='inputfiles/2018.root'
 
 f=ROOT.TFile.Open(inputf)
 
@@ -61,7 +61,9 @@ list_binnumber=[]
 tempsum1=0.
 tempsum2=0.
 tempsum3=0.
+binwidth=0.
 for ibin in range(Nbin):
+    binwidth+=10
     y1=htotal1.GetBinContent(ibin)
     y2=htotal2.GetBinContent(ibin)
     y3=htotal3.GetBinContent(ibin)
@@ -70,12 +72,12 @@ for ibin in range(Nbin):
     tempsum1+=y1
     tempsum2+=y2
     tempsum3+=y3
-    if tempsum1>0.01 and tempsum2>0.01 and tempsum3>0.01:
+    if tempsum1/binwidth>0.01 and tempsum2/binwidth>0.01 and tempsum3/binwidth>0.01:
         list_binnumber.append(ibin)
         tempsum1=0.
         tempsum2=0.
         tempsum3=0.
-    
+        binwidth=0.
 print list_binnumber
 
 
