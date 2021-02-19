@@ -1,5 +1,5 @@
 import ROOT
-
+import numpy as np
 bkglist=['qqWWqq',
 'tW',
 'DY',
@@ -14,6 +14,8 @@ bkglist=['qqWWqq',
 'MultiV',
 'QCD',
 ]
+import sys
+Year=sys.argv[1]
 
 '''
 __BoostedGGF_SR_MEKDTAG_M1500_C0.01
@@ -28,7 +30,7 @@ cutname1='__BoostedVBF_SR_NoMEKDCut'
 cutname2='__BoostedGGF_SR_MEKDTAG_M1500_C0.01'
 cutname3='__BoostedGGF_SR_UNTAGGED_M1500_C0.01'
 variablename='WW_mass'
-inputf='inputfiles/2018.root'
+inputf='inputfiles/'+Year+'.root'
 
 f=ROOT.TFile.Open(inputf)
 
@@ -53,6 +55,12 @@ for ibkg in range(0,len(bkglist)):
 
 
 
+##--
+
+hdata1=f.Get(cutname1+'/'+variablename+'/histo_DATA')
+hdata2=f.Get(cutname2+'/'+variablename+'/histo_DATA')
+hdata3=f.Get(cutname3+'/'+variablename+'/histo_DATA')
+
 
 Nbin=htotal1.GetNbinsX()
 print 'Nbin',Nbin
@@ -61,31 +69,67 @@ list_binnumber=[]
 tempsum1=0.
 tempsum2=0.
 tempsum3=0.
+tempsum1data=0.
+tempsum2data=0.
+tempsum3data=0.
+
 binwidth=0.
 for ibin in range(Nbin):
     binwidth+=10
     y1=htotal1.GetBinContent(ibin)
     y2=htotal2.GetBinContent(ibin)
     y3=htotal3.GetBinContent(ibin)
+    
+    y1data=hdata1.GetBinContent(ibin)
+    y2data=hdata2.GetBinContent(ibin)
+    y3data=hdata3.GetBinContent(ibin)
     #print y
 
     tempsum1+=y1
     tempsum2+=y2
     tempsum3+=y3
-    if tempsum1/binwidth>0.01 and tempsum2/binwidth>0.01 and tempsum3/binwidth>0.01:
+
+    tempsum1data+=y1data
+    tempsum2data+=y2data
+    tempsum3data+=y3data
+    #if tempsum1/binwidth>0.01 and tempsum2/binwidth>0.01 and tempsum3/binwidth>0.01 and tempsum1data/binwidth>0.01 and tempsum2data/binwidth>0.01 and tempsum3data/binwidth>0.01:
+    if tempsum1/binwidth>0.01 and tempsum2/binwidth>0.01 and tempsum3/binwidth>0.01 :
         list_binnumber.append(ibin)
         tempsum1=0.
         tempsum2=0.
         tempsum3=0.
+
+        tempsum1data=0.
+        tempsum2data=0.
+        tempsum3data=0.
+
         binwidth=0.
 print list_binnumber
 
 
 list_bin=[]
 for binnumber in list_binnumber:
-    x=htotal1.GetBinLowEdge(binnumber)+htotal1.GetBinWidth(binnumber)
-    print x
+    #x=htotal1.GetBinLowEdge(binnumber)+htotal1.GetBinWidth(binnumber)
+    x=htotal1.GetBinLowEdge(binnumber)
+    y1=htotal1.GetBinContent(binnumber)
+    y2=htotal2.GetBinContent(binnumber)
+    y3=htotal3.GetBinContent(binnumber)
+    print x,y1,y2,y3
     list_bin.append(x)
+list_bin+=[3000.]
 print 'len(list_bin)',len(list_bin)
+hrebin1=htotal1.Rebin(len(list_bin)-1,'hnew1',np.asarray(sorted(list_bin)))
+hrebin2=htotal2.Rebin(len(list_bin)-1,'hnew2',np.asarray(sorted(list_bin)))
+hrebin3=htotal3.Rebin(len(list_bin)-1,'hnew3',np.asarray(sorted(list_bin)))
+
+c=ROOT.TCanvas()
+c.SetLogy()
+hrebin1.Draw()
+c.SaveAs("VBF_bst_"+Year+".pdf")
+hrebin2.Draw()
+c.SaveAs("GGF_bst_"+Year+".pdf")
+hrebin3.Draw()
+c.SaveAs("UNT_bst_"+Year+".pdf")
+
 print list_bin
 f.Close()
